@@ -1,0 +1,162 @@
+version 16.10
+service timestamps debug datetime msec
+service timestamps log datetime msec
+platform qfp utilization monitor load 80
+no platform punt-keepalive disable-kernel-core
+platform console serial
+!
+hostname CISCO-ONPREM
+!
+boot-start-marker
+boot-end-marker
+!
+!
+vrf definition GS
+ rd 100:100
+ !
+ address-family ipv4
+ exit-address-family
+!
+logging persistent size 1000000 filesize 8192 immediate
+!
+aaa new-model
+!
+!
+aaa authentication login default local
+aaa authorization exec default local none
+!
+!
+!
+!
+!
+aaa session-id common
+!
+!
+!
+!
+!
+!
+!
+ip domain name CSR1.cisco.com
+!
+!
+!
+login on-success log
+!
+!
+!
+!
+!
+!
+!
+subscriber templating
+!
+!
+!
+!
+!
+multilink bundle-name authenticated
+!
+no license smart enable
+diagnostic bootup level minimal
+!
+!
+redundancy
+!
+!
+!
+!
+crypto ikev2 profile default
+ match identity remote fqdn domain cisco.com
+ identity local fqdn CSR1.cisco.com
+ authentication remote pre-share key cisco123
+ authentication local pre-share key cisco123
+!
+crypto ikev2 dpd 10 2 on-demand
+!
+interface Loopback0
+ ip address 10.255.3.1 255.255.255.255
+!
+interface Loopback1
+ ip address 10.255.3.2 255.255.255.255
+!
+interface Tunnel1
+ description to ONE
+ ip unnumbered Loopback0
+ tunnel source GigabitEthernet1
+ tunnel mode ipsec ipv4
+ tunnel destination 20.39.208.39
+ tunnel protection ipsec profile default
+!
+interface Tunnel2
+ description to TWO
+ ip unnumbered Loopback1
+ tunnel source GigabitEthernet1
+ tunnel mode ipsec ipv4
+ tunnel destination 40.81.144.77
+ tunnel protection ipsec profile default
+!
+interface GigabitEthernet1
+ ip address dhcp
+ negotiation auto
+!
+interface GigabitEthernet2
+ ip address dhcp
+ negotiation auto
+!
+router bgp 65000
+ bgp log-neighbor-changes
+ bgp bestpath as-path multipath-relax
+ neighbor 10.255.1.1 remote-as 65001
+ neighbor 10.255.1.1 ebgp-multihop 3
+ neighbor 10.255.1.1 update-source Loopback0
+ neighbor 10.255.2.1 remote-as 65002
+ neighbor 10.255.2.1 ebgp-multihop 3
+ neighbor 10.255.2.1 update-source Loopback1
+ !
+ address-family ipv4
+  network 10.0.0.0
+  neighbor 10.255.1.1 activate
+  neighbor 10.255.1.1 route-map bgp out
+  neighbor 10.255.2.1 activate
+  neighbor 10.255.2.1 route-map bgp out
+  maximum-paths 16
+ exit-address-family
+!
+ip forward-protocol nd
+no ip http server
+ip http secure-server
+ip route 10.0.0.0 255.0.0.0 Null0
+ip route 10.255.1.1 255.255.255.255 Tunnel1
+ip route 10.255.2.1 255.255.255.255 Tunnel2
+!
+ip ssh rsa keypair-name sshkeys
+!
+!
+ip prefix-list bgp seq 5 permit 10.0.0.0/8
+!
+!
+route-map bgp permit 10
+ match ip address prefix-list bgp
+!
+!
+!
+!
+!
+control-plane
+!
+!
+line con 0
+ stopbits 1
+line aux 0
+ stopbits 1
+line vty 1
+ length 0
+line vty 2 4
+!
+!
+!
+!
+!
+!
+end
