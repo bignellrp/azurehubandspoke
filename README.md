@@ -24,4 +24,4 @@ The backup CSR uses as path prepend to control the routing to prefer RTR1 althou
 
 #Diagram
 
-Azure_HubandSpokev9-Cisco Hub Solution with LB.png
+/Azure_HubandSpokev9-Cisco Hub Solution with LB.png
