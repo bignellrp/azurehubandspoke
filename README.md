@@ -1,5 +1,4 @@
-# azurehubandspoke
-Azure Hub and Spoke (NVA)
+# Azure Hub and Spoke (NVA)
 
 With thanks to @CISCORouting on YouTube i deployed this in Azure for a VNET hub and spoke solution.  
 
@@ -13,7 +12,7 @@ The design uses peering between the hub and spoke but does not require peering b
 
 See documentation here: https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-udr-overview
 
-#Overview
+**Overview**
 
 This solution simulates onprem using a single CSR which peers with the hub routers using eBGP over IPSEC.  
 This could just as easily be an onprem firewall via express route or a CSR in AWS for example as it uses public to public.
@@ -22,7 +21,7 @@ This could just as easily be an onprem firewall via express route or a CSR in AW
 
 The backup CSR uses as path prepend to control the routing to prefer RTR1 although at the time of writing this has not been tested with the Azure LB.
 
-#Diagram
+**Diagram**
 
-https://raw.githubusercontent.com/bignellrp/azurehubandspoke/master/Azure_HubandSpokev9-Cisco Hub Solution with LB.png
+![Azure Hub Diagram](https://github.com/bignellrp/azurehubandspoke/master/Azure_HubandSpokev9-Cisco Hub Solution with LB.png)
 
