@@ -1,0 +1,128 @@
+version 16.10
+service timestamps debug datetime msec
+service timestamps log datetime msec
+platform qfp utilization monitor load 80
+no platform punt-keepalive disable-kernel-core
+platform console serial
+!
+hostname CISCOHUB2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+vrf definition GS
+ rd 100:100
+ !
+ address-family ipv4
+ exit-address-family
+!
+logging persistent size 1000000 filesize 8192 immediate
+!
+aaa new-model
+!
+!
+aaa authentication login default local
+aaa authorization exec default local none
+!
+!
+aaa session-id common
+!
+!
+ip domain name CSR3.cisco.com
+!
+!
+!
+login on-success log
+!
+!
+subscriber templating
+!
+!
+multilink bundle-name authenticated
+!
+no license smart enable
+diagnostic bootup level minimal
+!
+!
+!
+redundancy
+!
+!
+!
+!
+crypto ikev2 profile default
+ match identity remote fqdn domain cisco.com
+ identity local fqdn CSR3.cisco.com
+ authentication remote pre-share key cisco123
+ authentication local pre-share key cisco123
+!
+crypto ikev2 dpd 10 2 on-demand
+!
+!
+interface Loopback0
+ ip address 10.255.2.1 255.255.255.255
+!
+interface Tunnel1
+ description to ONPREM
+ ip unnumbered Loopback0
+ tunnel source GigabitEthernet1
+ tunnel mode ipsec ipv4
+ tunnel destination 51.143.190.207
+ tunnel protection ipsec profile default
+!
+interface GigabitEthernet1
+ ip address dhcp
+ negotiation auto
+!
+interface GigabitEthernet2
+ ip address dhcp
+ negotiation auto
+!
+router bgp 65002
+ bgp log-neighbor-changes
+ bgp bestpath as-path multipath-relax
+ neighbor 10.255.3.2 remote-as 65000
+ neighbor 10.255.3.2 ebgp-multihop 3
+ neighbor 10.255.3.2 update-source Loopback0
+ !
+ address-family ipv4
+  network 10.74.0.0 mask 255.255.0.0
+  neighbor 10.255.3.2 activate
+  neighbor 10.255.3.2 route-map bgpprepend out
+  maximum-paths 16
+ exit-address-family
+!
+ip forward-protocol nd
+no ip http server
+ip http secure-server
+ip route 10.74.0.0 255.255.0.0 10.74.9.129
+ip route 10.255.3.2 255.255.255.255 Tunnel1
+!
+ip ssh rsa keypair-name sshkeys
+!
+!
+ip prefix-list bgp seq 5 permit 10.74.0.0/16
+!
+!
+route-map bgpprepend permit 10
+ match ip address prefix-list bgp
+ set as-path prepend 65002
+!
+route-map bgp permit 10
+ match ip address prefix-list bgp
+!
+!
+control-plane
+!
+!
+line con 0
+ stopbits 1
+line aux 0
+ stopbits 1
+line vty 1
+ length 0
+line vty 2 4
+!
+!
+end
