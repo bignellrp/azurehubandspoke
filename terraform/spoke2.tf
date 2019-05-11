@@ -1,5 +1,5 @@
 locals {
-  spoke2-location       = "CentralUS"
+  spoke2-location       = "uksouth"
   spoke2-resource-group = "spoke2-vnet-rg"
   prefix-spoke2         = "spoke2"
 }
@@ -13,25 +13,25 @@ resource "azurerm_virtual_network" "spoke2-vnet" {
   name                = "${local.prefix-spoke2}-vnet"
   location            = "${azurerm_resource_group.spoke2-vnet-rg.location}"
   resource_group_name = "${azurerm_resource_group.spoke2-vnet-rg.name}"
-  address_space       = ["10.2.0.0/16"]
+  address_space       = ["10.74.11.0/24"]
 
   tags {
     environment = "${local.prefix-spoke2}"
   }
 }
 
-resource "azurerm_subnet" "spoke2-mgmt" {
-  name                 = "mgmt"
+resource "azurerm_subnet" "spoke2-private" {
+  name                 = "private"
   resource_group_name  = "${azurerm_resource_group.spoke2-vnet-rg.name}"
   virtual_network_name = "${azurerm_virtual_network.spoke2-vnet.name}"
-  address_prefix       = "10.2.0.64/27"
+  address_prefix       = "10.74.11.128/25"
 }
 
-resource "azurerm_subnet" "spoke2-workload" {
-  name                 = "workload"
+resource "azurerm_subnet" "spoke2-public" {
+  name                 = "public"
   resource_group_name  = "${azurerm_resource_group.spoke2-vnet-rg.name}"
   virtual_network_name = "${azurerm_virtual_network.spoke2-vnet.name}"
-  address_prefix       = "10.2.1.0/24"
+  address_prefix       = "10.74.11.0/25"
 }
 
 resource "azurerm_virtual_network_peering" "spoke2-hub-peer" {
@@ -55,7 +55,7 @@ resource "azurerm_network_interface" "spoke2-nic" {
 
   ip_configuration {
     name                          = "${local.prefix-spoke2}"
-    subnet_id                     = "${azurerm_subnet.spoke2-mgmt.id}"
+    subnet_id                     = "${azurerm_subnet.spoke2-private.id}"
     private_ip_address_allocation = "Dynamic"
   }
 
