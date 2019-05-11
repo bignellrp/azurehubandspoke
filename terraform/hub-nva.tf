@@ -21,9 +21,9 @@ resource "azurerm_network_interface" "hub-nva1-nic1" {
 
   ip_configuration {
     name                          = "${local.prefix-hub-nva}"
-    subnet_id                     = "${azurerm_subnet.hub-dmz.id}"
+    subnet_id                     = "${azurerm_subnet.hub-public.id}"
     private_ip_address_allocation = "Static"
-    private_ip_address            = "10.0.0.36" #Needs changing
+    private_ip_address            = "10.74.9.4"
   }
 
   tags {
@@ -39,9 +39,9 @@ resource "azurerm_network_interface" "hub-nva1-nic2" {
 
   ip_configuration {
     name                          = "${local.prefix-hub-nva}"
-    subnet_id                     = "${azurerm_subnet.hub-dmz.id}" #Need to add a private subnet for second nic
+    subnet_id                     = "${azurerm_subnet.hub-private.id}"
     private_ip_address_allocation = "Static"
-    private_ip_address            = "10.0.0.37" #Needs changing
+    private_ip_address            = "10.74.9.132"
   }
 
   tags {
@@ -57,9 +57,9 @@ resource "azurerm_network_interface" "hub-nva2-nic1" {
 
   ip_configuration {
     name                          = "${local.prefix-hub-nva}"
-    subnet_id                     = "${azurerm_subnet.hub-dmz.id}"
+    subnet_id                     = "${azurerm_subnet.hub-public.id}"
     private_ip_address_allocation = "Static"
-    private_ip_address            = "10.0.0.38" #Needs changing
+    private_ip_address            = "10.74.9.5"
   }
 
   tags {
@@ -75,9 +75,9 @@ resource "azurerm_network_interface" "hub-nva2-nic2" {
 
   ip_configuration {
     name                          = "${local.prefix-hub-nva}"
-    subnet_id                     = "${azurerm_subnet.hub-dmz.id}" #Need to add a private subnet for second nic
+    subnet_id                     = "${azurerm_subnet.hub-private.id}"
     private_ip_address_allocation = "Static"
-    private_ip_address            = "10.0.0.39" #Needs changing
+    private_ip_address            = "10.74.9.133"
   }
 
   tags {
@@ -163,28 +163,28 @@ resource "azurerm_virtual_machine" "hub-nva2-vm" {
 
 # May need to modify this script below to apply the Cisco config
 
-resource "azurerm_virtual_machine_extension" "enable-routes" {
-  name                 = "enable-iptables-routes"
-  location             = "${azurerm_resource_group.hub-nva-rg.location}"
-  resource_group_name  = "${azurerm_resource_group.hub-nva-rg.name}"
-  virtual_machine_name = "${azurerm_virtual_machine.hub-nva-vm.name}"
-  publisher            = "Microsoft.Azure.Extensions"
-  type                 = "CustomScript"
-  type_handler_version = "2.0"
-
-  settings = <<SETTINGS
-    {
-        "fileUris": [
-        "https://raw.githubusercontent.com/mspnp/reference-architectures/master/scripts/linux/enable-ip-forwarding.sh"
-        ],
-        "commandToExecute": "bash enable-ip-forwarding.sh"
-    }
-SETTINGS
-
-  tags {
-    environment = "${local.prefix-hub-nva}"
-  }
-}
+#resource "azurerm_virtual_machine_extension" "enable-routes" {
+#  name                 = "enable-iptables-routes"
+#  location             = "${azurerm_resource_group.hub-nva-rg.location}"
+#  resource_group_name  = "${azurerm_resource_group.hub-nva-rg.name}"
+#  virtual_machine_name = "${azurerm_virtual_machine.hub-nva-vm.name}"
+#  publisher            = "Microsoft.Azure.Extensions"
+#  type                 = "CustomScript"
+#  type_handler_version = "2.0"
+#
+#  settings = <<SETTINGS
+#    {
+#        "fileUris": [
+#        "https://raw.githubusercontent.com/mspnp/reference-architectures/master/scripts/linux/enable-ip-forwarding.sh"
+#        ],
+#        "commandToExecute": "bash enable-ip-forwarding.sh"
+#    }
+#SETTINGS
+#
+#  tags {
+#    environment = "${local.prefix-hub-nva}"
+#  }
+#}
 
 # Create hub RT
 
@@ -225,7 +225,7 @@ resource "azurerm_route_table" "spoke1-rt" {
     name                   = "toHub"
     address_prefix         = "10.0.0.0/8"
     next_hop_type          = "VirtualAppliance"
-    next_hop_in_ip_address = "10.0.0.36"
+    next_hop_in_ip_address = "10.74.9.132"
   }
 
   route {
@@ -260,7 +260,7 @@ resource "azurerm_route_table" "spoke2-rt" {
   route {
     name                   = "toHub"
     address_prefix         = "10.0.0.0/8"
-    next_hop_in_ip_address = "10.0.0.36"
+    next_hop_in_ip_address = "10.74.9.132"
     next_hop_type          = "VirtualAppliance"
   }
 
