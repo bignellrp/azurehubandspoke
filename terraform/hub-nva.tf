@@ -30,6 +30,7 @@ resource "azurerm_network_interface" "hub-nva1-nic1" {
     subnet_id                     = "${azurerm_subnet.hub-public.id}"
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.74.9.4"
+    primary                       = "true"
   }
 
   tags {
@@ -70,6 +71,7 @@ resource "azurerm_network_interface" "hub-nva2-nic1" {
     subnet_id                     = "${azurerm_subnet.hub-public.id}"
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.74.9.5"
+    primary                       = "true"
   }
 
   tags {
