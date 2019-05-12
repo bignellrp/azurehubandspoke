@@ -55,7 +55,7 @@ resource "azurerm_virtual_network_peering" "spoke1-hub-peer" {
   allow_virtual_network_access = true
   allow_forwarded_traffic = true
   allow_gateway_transit   = false
-  use_remote_gateways     = true
+  use_remote_gateways     = false # Forgot the gateway has now ben removed
   depends_on = ["azurerm_virtual_network.spoke1-vnet", "azurerm_virtual_network.hub-vnet"]
 }
 
@@ -121,7 +121,7 @@ resource "azurerm_virtual_network_peering" "hub-spoke1-peer" {
   remote_virtual_network_id = "${azurerm_virtual_network.spoke1-vnet.id}"
   allow_virtual_network_access = true
   allow_forwarded_traffic   = true
-  allow_gateway_transit     = true
+  allow_gateway_transit     = false
   use_remote_gateways       = false
   depends_on = ["azurerm_virtual_network.spoke1-vnet", "azurerm_virtual_network.hub-vnet"]
 }
