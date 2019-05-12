@@ -126,12 +126,12 @@ resource "azurerm_virtual_network_peering" "hub-spoke1-peer" {
   depends_on = ["azurerm_virtual_network.spoke1-vnet", "azurerm_virtual_network.hub-vnet"]
 }
 
-# Create Spoke RT - Shouldnt this be part of the Spoke TF and in the spoke RG
+# Create Spoke RT
 
 resource "azurerm_route_table" "spoke1-rt" {
   name                          = "spoke1-rt"
-  location                      = "${azurerm_resource_group.hub-nva-rg.location}"
-  resource_group_name           = "${azurerm_resource_group.hub-nva-rg.name}"
+  location                      = "${azurerm_resource_group.spoke1-vnet-rg.location}"
+  resource_group_name           = "${azurerm_resource_group.spoke1-vnet-rg.name}"
   disable_bgp_route_propagation = false
 
   route {
