@@ -90,8 +90,8 @@ resource "azurerm_lb_rule" "azlb" {
   loadbalancer_id                = "${azurerm_lb.azlb.id}"
   name                           = "${local.prefix-hub}-rule"
   protocol                       = "All"
-  frontend_port                  = "All"
-  backend_port                   = "All"
+  frontend_port                  = "0"
+  backend_port                   = "0"
   frontend_ip_configuration_name = "${local.prefix-hub}-fip"
   enable_floating_ip             = false
   backend_address_pool_id        = "${azurerm_lb_backend_address_pool.azlb.id}"
