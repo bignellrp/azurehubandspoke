@@ -1,8 +1,12 @@
+# Define local variables (check globals in parameters file)
+
 locals {
   prefix-hub-nva         = "hub-nva"
   hub-nva-location       = "uksouth"
   hub-nva-resource-group = "hub-nva-rg"
 }
+
+# Create Resource Group for NVA
 
 resource "azurerm_resource_group" "hub-nva-rg" {
   name     = "${local.prefix-hub-nva}-rg"
@@ -12,6 +16,8 @@ resource "azurerm_resource_group" "hub-nva-rg" {
     environment = "${local.prefix-hub-nva}"
   }
 }
+
+# Create NIC1 for NVA1
 
 resource "azurerm_network_interface" "hub-nva1-nic1" {
   name                 = "${local.prefix-hub-nva}-nic1"
@@ -31,6 +37,8 @@ resource "azurerm_network_interface" "hub-nva1-nic1" {
   }
 }
 
+# Create NIC2 for NVA1
+
 resource "azurerm_network_interface" "hub-nva1-nic2" {
   name                 = "${local.prefix-hub-nva}-nic2"
   location             = "${azurerm_resource_group.hub-nva-rg.location}"
@@ -48,6 +56,8 @@ resource "azurerm_network_interface" "hub-nva1-nic2" {
     environment = "${local.prefix-hub-nva}"
   }
 }
+
+# Create NIC1 for NVA2
 
 resource "azurerm_network_interface" "hub-nva2-nic1" {
   name                 = "${local.prefix-hub-nva}-nic1"
@@ -67,6 +77,8 @@ resource "azurerm_network_interface" "hub-nva2-nic1" {
   }
 }
 
+# Create NIC2 for NVA2
+
 resource "azurerm_network_interface" "hub-nva2-nic2" {
   name                 = "${local.prefix-hub-nva}-nic2"
   location             = "${azurerm_resource_group.hub-nva-rg.location}"
@@ -85,7 +97,7 @@ resource "azurerm_network_interface" "hub-nva2-nic2" {
   }
 }
 
-# Create NVA1
+# Create NVA1 and attach NICS
 
 resource "azurerm_virtual_machine" "hub-nva1-vm" {
   name                  = "${local.prefix-hub-nva}-vm"
@@ -123,7 +135,7 @@ resource "azurerm_virtual_machine" "hub-nva1-vm" {
   }
 }
 
-# Create NVA2 - Duplicated from above for second nva
+# Create NVA2 and attach NICS
 
 resource "azurerm_virtual_machine" "hub-nva2-vm" {
   name                  = "${local.prefix-hub-nva}-vm"
@@ -161,7 +173,7 @@ resource "azurerm_virtual_machine" "hub-nva2-vm" {
   }
 }
 
-# May need to modify this script below to apply the Cisco config
+# Can this be modified to support applying the Cisco config or should a bootstrap be used?
 
 #resource "azurerm_virtual_machine_extension" "enable-routes" {
 #  name                 = "enable-iptables-routes"
@@ -185,105 +197,3 @@ resource "azurerm_virtual_machine" "hub-nva2-vm" {
 #    environment = "${local.prefix-hub-nva}"
 #  }
 #}
-
-# Create hub RT
-
-resource "azurerm_route_table" "hub-gateway-rt" {
-  name                          = "hub-gateway-rt"
-  location                      = "${azurerm_resource_group.hub-nva-rg.location}"
-  resource_group_name           = "${azurerm_resource_group.hub-nva-rg.name}"
-  disable_bgp_route_propagation = false
-
-  route {
-    name           = "toHub"
-    address_prefix = "10.0.0.0/16"
-    next_hop_type  = "VnetLocal"
-  }
-
-  tags {
-    environment = "${local.prefix-hub-nva}"
-  }
-}
-
-# Assoc Hub RT to subnet
-
-resource "azurerm_subnet_route_table_association" "hub-gateway-rt-hub-vnet-gateway-subnet" {
-  subnet_id      = "${azurerm_subnet.hub-gateway-subnet.id}"
-  route_table_id = "${azurerm_route_table.hub-gateway-rt.id}"
-  depends_on = ["azurerm_subnet.hub-gateway-subnet"]
-}
-
-# Create Spoke RT - Shouldnt this be part of the Spoke TF and in the spoke RG
-
-resource "azurerm_route_table" "spoke1-rt" {
-  name                          = "spoke1-rt"
-  location                      = "${azurerm_resource_group.hub-nva-rg.location}"
-  resource_group_name           = "${azurerm_resource_group.hub-nva-rg.name}"
-  disable_bgp_route_propagation = false
-
-  route {
-    name                   = "toHub"
-    address_prefix         = "10.0.0.0/8"
-    next_hop_type          = "VirtualAppliance"
-    next_hop_in_ip_address = "10.74.9.132"
-  }
-
-  route {
-    name           = "default"
-    address_prefix = "0.0.0.0/0"
-    next_hop_type  = "vnetlocal"
-  }
-
-  tags {
-    environment = "${local.prefix-hub-nva}"
-  }
-}
-
-resource "azurerm_subnet_route_table_association" "spoke1-rt-spoke1-vnet-mgmt" {
-  subnet_id      = "${azurerm_subnet.spoke1-mgmt.id}"
-  route_table_id = "${azurerm_route_table.spoke1-rt.id}"
-  depends_on = ["azurerm_subnet.spoke1-mgmt"]
-}
-
-resource "azurerm_subnet_route_table_association" "spoke1-rt-spoke1-vnet-workload" {
-  subnet_id      = "${azurerm_subnet.spoke1-workload.id}"
-  route_table_id = "${azurerm_route_table.spoke1-rt.id}"
-  depends_on = ["azurerm_subnet.spoke1-workload"]
-}
-
-resource "azurerm_route_table" "spoke2-rt" {
-  name                          = "spoke2-rt"
-  location                      = "${azurerm_resource_group.hub-nva-rg.location}"
-  resource_group_name           = "${azurerm_resource_group.hub-nva-rg.name}"
-  disable_bgp_route_propagation = false
-
-  route {
-    name                   = "toHub"
-    address_prefix         = "10.0.0.0/8"
-    next_hop_in_ip_address = "10.74.9.132"
-    next_hop_type          = "VirtualAppliance"
-  }
-
-  route {
-    name           = "default"
-    address_prefix = "0.0.0.0/0"
-    next_hop_type  = "vnetlocal"
-  }
-
-  tags {
-    environment = "${local.prefix-hub-nva}"
-  }
-}
-
-resource "azurerm_subnet_route_table_association" "spoke2-rt-spoke2-vnet-mgmt" {
-  subnet_id      = "${azurerm_subnet.spoke2-mgmt.id}"
-  route_table_id = "${azurerm_route_table.spoke2-rt.id}"
-  depends_on = ["azurerm_subnet.spoke2-mgmt"]
-}
-
-resource "azurerm_subnet_route_table_association" "spoke2-rt-spoke2-vnet-workload" {
-  subnet_id      = "${azurerm_subnet.spoke2-workload.id}"
-  route_table_id = "${azurerm_route_table.spoke2-rt.id}"
-  depends_on = ["azurerm_subnet.spoke2-workload"]
-}
-
