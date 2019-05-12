@@ -83,7 +83,7 @@ resource "azurerm_lb_probe" "azlb" {
   number_of_probes    = "2"
 }
 
-Create LB Rule
+# Create LB Rule
 
 resource "azurerm_lb_rule" "azlb" {
   resource_group_name            = "${azurerm_resource_group.hub-vnet-rg.name}"
