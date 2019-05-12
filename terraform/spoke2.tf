@@ -134,8 +134,8 @@ resource "azurerm_virtual_network_peering" "hub-spoke2-peer" {
 
 resource "azurerm_route_table" "spoke2-rt" {
   name                          = "spoke2-rt"
-  location                      = "${azurerm_resource_group.hub-nva-rg.location}"
-  resource_group_name           = "${azurerm_resource_group.hub-nva-rg.name}"
+  location                      = "${azurerm_resource_group.spoke2-vnet-rg.location}"
+  resource_group_name           = "${azurerm_resource_group.spoke2-vnet-rg.name}"
   disable_bgp_route_propagation = false
 
   route {
