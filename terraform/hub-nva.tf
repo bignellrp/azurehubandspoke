@@ -105,7 +105,7 @@ resource "azurerm_virtual_machine" "hub-nva1-vm" {
   name                  = "${local.prefix-hub-nva}-vm"
   location              = "${azurerm_resource_group.hub-nva-rg.location}"
   resource_group_name   = "${azurerm_resource_group.hub-nva-rg.name}"
-  network_interface_ids = ["${azurerm_network_interface.hub-nva1-nic1.id}", "${azurerm_network_interface.hub-nva1-nic2.id}"]
+  network_interface_ids = ["${azurerm_network_interface.hub-nva1-nic1.id}"]  # Needs a second interface
   vm_size               = "${var.vmsize}"
 
   storage_image_reference {
@@ -143,7 +143,7 @@ resource "azurerm_virtual_machine" "hub-nva2-vm" {
   name                  = "${local.prefix-hub-nva}-vm"
   location              = "${azurerm_resource_group.hub-nva-rg.location}"
   resource_group_name   = "${azurerm_resource_group.hub-nva-rg.name}"
-  network_interface_ids = ["${azurerm_network_interface.hub-nva2-nic1.id}", "${azurerm_network_interface.hub-nva2-nic2.id}"]
+  network_interface_ids = ["${azurerm_network_interface.hub-nva2-nic1.id}"]  # Needs a second interface
   vm_size               = "${var.vmsize}"
 
   storage_image_reference {
