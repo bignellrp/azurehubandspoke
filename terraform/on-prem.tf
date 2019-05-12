@@ -193,7 +193,7 @@ resource "azurerm_virtual_machine" "onprem-rtr-vm" {
   name                  = "${local.prefix-onprem}-rtr-vm"
   location              = "${azurerm_resource_group.onprem-vnet-rg.location}"
   resource_group_name   = "${azurerm_resource_group.onprem-vnet-rg.name}"
-  network_interface_ids = ["${azurerm_network_interface.onprem-rtr-nic1.id}", "${azurerm_network_interface.onprem-rtr-nic2.id}"]
+  network_interface_ids = [{"id" => "${azurerm_network_interface.onprem-rtr-nic1.id}", "primary" => true}, "${azurerm_network_interface.onprem-rtr-nic2.id}"]
   vm_size               = "${var.vmsize}"
 
   storage_image_reference {
