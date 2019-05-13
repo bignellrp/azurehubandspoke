@@ -139,7 +139,7 @@ resource "azurerm_virtual_machine" "hub-nva1-vm" {
   storage_image_reference {
     publisher = "Cisco"
     offer     = "Cisco-CSR-1000V"
-    sku       = "csr-azure-byol"
+    sku       = "csr-azure-payg"
     version   = "3.16.10"
   }
 
