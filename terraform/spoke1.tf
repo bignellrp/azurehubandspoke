@@ -55,7 +55,7 @@ resource "azurerm_virtual_network_peering" "spoke1-hub-peer" {
   allow_virtual_network_access = true
   allow_forwarded_traffic = true
   allow_gateway_transit   = false
-  use_remote_gateways     = false # Forgot the gateway has now ben removed
+  use_remote_gateways     = false
   depends_on = ["azurerm_virtual_network.spoke1-vnet", "azurerm_virtual_network.hub-vnet"]
 }
 
@@ -148,7 +148,7 @@ resource "azurerm_route_table" "spoke1-rt" {
   }
 
   tags {
-    environment = "${local.prefix-hub-nva}"
+    environment = "${local.prefix-spoke1}"
   }
 }
 
