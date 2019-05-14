@@ -44,6 +44,29 @@ resource "azurerm_subnet" "hub-public" {
   address_prefix       = "10.74.9.0/25"
 }
 
+# Create Public IP for NVA1
+
+resource "azurerm_public_ip" "nva1_public" {
+  name                 = "${local.prefix-hub}-pubip1"
+  location             = "${azurerm_resource_group.hub-vnet-rg.location}"
+  resource_group_name  = "${azurerm_resource_group.hub-vnet-rg.name}"
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = ["1"]
+}
+
+# Create Public IP for NVA2
+
+resource "azurerm_public_ip" "nva2_public" {
+  name                 = "${local.prefix-hub}-pubip2"
+  location             = "${azurerm_resource_group.hub-vnet-rg.location}"
+  resource_group_name  = "${azurerm_resource_group.hub-vnet-rg.name}"
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = ["2"]
+}
+
+
 # Create NIC1 for NVA1
 
 resource "azurerm_network_interface" "hub-nva1-nic1" {
@@ -58,6 +81,7 @@ resource "azurerm_network_interface" "hub-nva1-nic1" {
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.74.9.4"
     primary                       = "true"
+    public_ip_address_id          = "${azurerm_public_ip.nva1_public.id}"
   }
 
   tags {
@@ -78,6 +102,7 @@ resource "azurerm_network_interface" "hub-nva1-nic2" {
     subnet_id                     = "${azurerm_subnet.hub-private.id}"
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.74.9.132"
+    load_balancer_backend_address_pools_ids = ["${azurerm_lb_backend_address_pool.azlb.id}"]
   }
 
   tags {
@@ -99,6 +124,7 @@ resource "azurerm_network_interface" "hub-nva2-nic1" {
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.74.9.5"
     primary                       = "true"
+    public_ip_address_id          = "${azurerm_public_ip.nva2_public.id}"
   }
 
   tags {
@@ -119,6 +145,7 @@ resource "azurerm_network_interface" "hub-nva2-nic2" {
     subnet_id                     = "${azurerm_subnet.hub-private.id}"
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.74.9.133"
+    load_balancer_backend_address_pools_ids = ["${azurerm_lb_backend_address_pool.azlb.id}"]
   }
 
   tags {
@@ -135,12 +162,19 @@ resource "azurerm_virtual_machine" "hub-nva1-vm" {
   network_interface_ids = ["${azurerm_network_interface.hub-nva1-nic1.id}", "${azurerm_network_interface.hub-nva1-nic2.id}"]
   primary_network_interface_id = "${azurerm_network_interface.hub-nva1-nic1.id}"
   vm_size               = "${var.vmsize}"
+  zones                 = ["1"]
 
   storage_image_reference {
-    publisher = "Cisco"
-    offer     = "Cisco-CSR-1000V"
-    sku       = "csr-azure-payg"
-    version   = "3.16.10"
+    publisher = "cisco"
+    offer     = "cisco-csr-1000v"
+    sku       = "16_10-payg-sec"
+    version   = "16.10.120190108"
+  }
+
+  plan {
+    name      = "16_10-payg-sec"
+    publisher = "cisco"
+    product   = "cisco-csr-1000v"
   }
 
   storage_os_disk {
@@ -154,6 +188,7 @@ resource "azurerm_virtual_machine" "hub-nva1-vm" {
     computer_name  = "${local.prefix-hub}-vm"
     admin_username = "${var.username}"
     admin_password = "${var.password}"
+    custom_data    = "${file("customdata.txt")}"
   }
 
   os_profile_linux_config {
@@ -167,63 +202,50 @@ resource "azurerm_virtual_machine" "hub-nva1-vm" {
 
 # Create NVA2 and attach NICS
 
-#resource "azurerm_virtual_machine" "hub-nva2-vm" {
-#  name                  = "${local.prefix-hub}-vm"
-#  location              = "${azurerm_resource_group.hub-vnet-rg.location}"
-#  resource_group_name   = "${azurerm_resource_group.hub-vnet-rg.name}"
-#  network_interface_ids = ["${azurerm_network_interface.hub-nva2-nic1.id}"]  # Needs a second interface
-#  vm_size               = "${var.vmsize}"
-#
-#  storage_image_reference {
-#    publisher = "Canonical"
-#    offer     = "UbuntuServer"
-#    sku       = "16.04-LTS"
-#    version   = "latest"
-#  }
+resource "azurerm_virtual_machine" "hub-nva2-vm" {
+  name                  = "${local.prefix-hub}-vm"
+  location              = "${azurerm_resource_group.hub-vnet-rg.location}"
+  resource_group_name   = "${azurerm_resource_group.hub-vnet-rg.name}"
+  network_interface_ids = ["${azurerm_network_interface.hub-nva2-nic1.id}", "${azurerm_network_interface.hub-nva2-nic2.id}"]
+  primary_network_interface_id = "${azurerm_network_interface.hub-nva2-nic1.id}"
+  vm_size               = "${var.vmsize}"
+  zones                 = ["2"]
 
-#  storage_os_disk {
-#    name              = "myosdisk2"
-#    caching           = "ReadWrite"
-#    create_option     = "FromImage"
-#    managed_disk_type = "Standard_LRS"
-#  }
+  storage_image_reference {
+    publisher = "cisco"
+    offer     = "cisco-csr-1000v"
+    sku       = "16_10-payg-sec"
+    version   = "16.10.120190108"
+  }
 
-#  os_profile {
-#    computer_name  = "${local.prefix-hub}-vm"
-#    admin_username = "${var.username}"
-#    admin_password = "${var.password}"
-#  }
+  plan {
+    name      = "16_10-payg-sec"
+    publisher = "cisco"
+    product   = "cisco-csr-1000v"
+  }
 
-#  os_profile_linux_config {
-#    disable_password_authentication = false
-#  }
+  storage_os_disk {
+    name              = "myosdisk2"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
+  }
 
-#  tags {
-#    environment = "${local.prefix-hub}"
-#  }
-#}
+  os_profile {
+    computer_name  = "${local.prefix-hub}-vm"
+    admin_username = "${var.username}"
+    admin_password = "${var.password}"
+    custom_data    = "${file("customdata.txt")}"
+  }
 
-# Can this be modified to support applying the Cisco config or should a bootstrap be used?
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
 
-#resource "azurerm_virtual_machine_extension" "enable-routes" {
-#  name                 = "enable-iptables-routes"
-#  location             = "${azurerm_resource_group.hub-vnet-rg.location}"
-#  resource_group_name  = "${azurerm_resource_group.hub-vnet-rg.name}"
-#  virtual_machine_name = "${azurerm_virtual_machine.hub-nva-vm.name}"
-#  publisher            = "Microsoft.Azure.Extensions"
-#  type                 = "CustomScript"
-#  type_handler_version = "2.0"
-#
-#  settings = <<SETTINGS
-#    {
-#        "commandToExecute": "bash enable-ip-forwarding.sh"
-#    }
-#SETTINGS
-#
-#  tags {
-#    environment = "${local.prefix-hub}"
-#  }
-#}
+  tags {
+    environment = "${local.prefix-hub}"
+  }
+}
 
 # Create LB
 
@@ -244,7 +266,7 @@ resource "azurerm_lb" "azlb" {
   }
 }
 
-# Create AddressPool - Not sure how to add addresses
+# Create AddressPool
 
 resource "azurerm_lb_backend_address_pool" "azlb" {
   resource_group_name = "${azurerm_resource_group.hub-vnet-rg.name}"
@@ -279,4 +301,18 @@ resource "azurerm_lb_rule" "azlb" {
   idle_timeout_in_minutes        = 5
   probe_id                       = "${azurerm_lb_probe.azlb.id}"
   depends_on                     = ["azurerm_lb_probe.azlb"]
+}
+
+# Associate IPs to Address Pool
+
+resource "azurerm_network_interface_backend_address_pool_association" "lb_assoc_nva1" {
+  network_interface_id    = "${azurerm_network_interface.hub_nva1_nic2.id}"
+  ip_configuration_name   = "${azurerm_network_interface.hub_nva1_nic2.ip_configuration.0.name}"
+  backend_address_pool_id = "${azurerm_lb_backend_address_pool.azlb.id}"
+}
+
+resource "azurerm_network_interface_backend_address_pool_association" "lb_assoc_nva2" {
+  network_interface_id    = "${azurerm_network_interface.hub_nva2_nic2.id}"
+  ip_configuration_name   = "${azurerm_network_interface.hub_nva2_nic2.ip_configuration.0.name}"
+  backend_address_pool_id = "${azurerm_lb_backend_address_pool.azlb.id}"
 }
