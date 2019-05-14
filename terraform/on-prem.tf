@@ -110,6 +110,7 @@ resource "azurerm_network_interface" "onprem-rtr-nic2" {
   location             = "${azurerm_resource_group.onprem-vnet-rg.location}"
   resource_group_name  = "${azurerm_resource_group.onprem-vnet-rg.name}"
   enable_ip_forwarding = true
+  network_security_group_id = "${azurerm_network_security_group.onprem-nsg.id}"
 
   ip_configuration {
     name                          = "${local.prefix-onprem}"
@@ -133,20 +134,13 @@ resource "azurerm_network_security_group" "onprem-nsg" {
         protocol                   = "Tcp"
         source_port_range          = "*"
         destination_port_range     = "22"
-      source_address_prefix      = "*"
+        source_address_prefix      = "*"
         destination_address_prefix = "*"
     }
 
     tags {
         environment = "onprem"
     }
-}
-
-# Associate NSG with Private Subnet
-
-resource "azurerm_subnet_network_security_group_association" "private-nsg-association" {
-  subnet_id                 = "${azurerm_subnet.onprem-private.id}"
-  network_security_group_id = "${azurerm_network_security_group.onprem-nsg.id}"
 }
 
 # Create Onprem VM
@@ -193,14 +187,21 @@ resource "azurerm_virtual_machine" "onprem-rtr-vm" {
   name                  = "${local.prefix-onprem}-rtr-vm"
   location              = "${azurerm_resource_group.onprem-vnet-rg.location}"
   resource_group_name   = "${azurerm_resource_group.onprem-vnet-rg.name}"
-  network_interface_ids = ["${azurerm_network_interface.onprem-rtr-nic1.id}"] # Needs a second interface
+  network_interface_ids = ["${azurerm_network_interface.onprem-rtr-nic1.id}", "${azurerm_network_interface.onprem-rtr-nic2.id}"]
+  primary_network_interface_id = "${azurerm_network_interface.onprem-rtr-nic1.id}"
   vm_size               = "${var.vmsize}"
 
   storage_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
-    version   = "latest"
+    publisher = "cisco"
+    offer     = "cisco-csr-1000v"
+    sku       = "16_10-payg-sec"
+    version   = "16.10.120190108"
+  }
+
+  plan {
+    name      = "16_10-payg-sec"
+    publisher = "cisco"
+    product   = "cisco-csr-1000v"
   }
 
   storage_os_disk {
@@ -211,9 +212,10 @@ resource "azurerm_virtual_machine" "onprem-rtr-vm" {
   }
 
   os_profile {
-    computer_name  = "${local.prefix-onprem}-vm"
+    computer_name  = "${local.prefix-hub}-onprem"
     admin_username = "${var.username}"
     admin_password = "${var.password}"
+    custom_data    = "${file("customdataonprem.txt")}"
   }
 
   os_profile_linux_config {
@@ -221,6 +223,6 @@ resource "azurerm_virtual_machine" "onprem-rtr-vm" {
   }
 
   tags {
-    environment = "${local.prefix-onprem}"
+    environment = "${local.prefix-hub}"
   }
 }
