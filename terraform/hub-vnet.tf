@@ -52,7 +52,7 @@ resource "azurerm_public_ip" "nva1_public" {
   resource_group_name  = "${azurerm_resource_group.hub-vnet-rg.name}"
   allocation_method   = "Static"
   sku                 = "Standard"
-#  zones               = ["1"]
+  zones               = ["1"]
 }
 
 # Create Public IP for NVA2
@@ -63,7 +63,7 @@ resource "azurerm_public_ip" "nva2_public" {
   resource_group_name  = "${azurerm_resource_group.hub-vnet-rg.name}"
   allocation_method   = "Static"
   sku                 = "Standard"
-#  zones               = ["2"]
+  zones               = ["2"]
 }
 
 
@@ -74,6 +74,7 @@ resource "azurerm_network_interface" "hub-nva1-nic1" {
   location             = "${azurerm_resource_group.hub-vnet-rg.location}"
   resource_group_name  = "${azurerm_resource_group.hub-vnet-rg.name}"
   enable_ip_forwarding = true
+  network_security_group_id = "${azurerm_network_security_group.nva-nsg.id}"
 
   ip_configuration {
     name                          = "${local.prefix-hub}"
@@ -102,7 +103,6 @@ resource "azurerm_network_interface" "hub-nva1-nic2" {
     subnet_id                     = "${azurerm_subnet.hub-private.id}"
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.74.9.132"
-#    load_balancer_backend_address_pools_ids = ["${azurerm_lb_backend_address_pool.azlb.id}"]
   }
 
   tags {
@@ -117,6 +117,7 @@ resource "azurerm_network_interface" "hub-nva2-nic1" {
   location             = "${azurerm_resource_group.hub-vnet-rg.location}"
   resource_group_name  = "${azurerm_resource_group.hub-vnet-rg.name}"
   enable_ip_forwarding = true
+  network_security_group_id = "${azurerm_network_security_group.nva-nsg.id}"
 
   ip_configuration {
     name                          = "${local.prefix-hub}"
@@ -145,7 +146,6 @@ resource "azurerm_network_interface" "hub-nva2-nic2" {
     subnet_id                     = "${azurerm_subnet.hub-private.id}"
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.74.9.133"
-#    load_balancer_backend_address_pools_ids = ["${azurerm_lb_backend_address_pool.azlb.id}"]
   }
 
   tags {
@@ -162,7 +162,7 @@ resource "azurerm_virtual_machine" "hub-nva1-vm" {
   network_interface_ids = ["${azurerm_network_interface.hub-nva1-nic1.id}", "${azurerm_network_interface.hub-nva1-nic2.id}"]
   primary_network_interface_id = "${azurerm_network_interface.hub-nva1-nic1.id}"
   vm_size               = "${var.vmsize}"
-#  zones                 = ["1"]
+  zones                 = ["1"]
 
   storage_image_reference {
     publisher = "cisco"
@@ -209,7 +209,7 @@ resource "azurerm_virtual_machine" "hub-nva2-vm" {
   network_interface_ids = ["${azurerm_network_interface.hub-nva2-nic1.id}", "${azurerm_network_interface.hub-nva2-nic2.id}"]
   primary_network_interface_id = "${azurerm_network_interface.hub-nva2-nic1.id}"
   vm_size               = "${var.vmsize}"
-#  zones                 = ["2"]
+  zones                 = ["2"]
 
   storage_image_reference {
     publisher = "cisco"
@@ -340,11 +340,4 @@ resource "azurerm_network_security_group" "nva-nsg" {
     tags {
         environment = "local.prefix-hub"
     }
-}
-
-# Associate NSG with Private Subnet
-
-resource "azurerm_subnet_network_security_group_association" "private-nsg-association" {
-  subnet_id                 = "${azurerm_subnet.hub-private.id}"
-  network_security_group_id = "${azurerm_network_security_group.nva-nsg.id}"
 }
