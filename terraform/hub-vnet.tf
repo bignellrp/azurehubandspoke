@@ -253,6 +253,7 @@ resource "azurerm_lb" "azlb" {
   name                = "${local.prefix-hub}-lb"
   location            = "${azurerm_resource_group.hub-vnet-rg.location}"
   resource_group_name = "${azurerm_resource_group.hub-vnet-rg.name}"
+  sku                 = "Standard"
 
   frontend_ip_configuration {
     name                          = "${local.prefix-hub}-fip"
