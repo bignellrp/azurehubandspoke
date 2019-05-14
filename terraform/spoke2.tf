@@ -152,7 +152,7 @@ resource "azurerm_route_table" "spoke2-rt" {
   }
 
   tags {
-    environment = "${local.prefix-hub-nva}"
+    environment = "${local.prefix-spoke2}"
   }
 }
 
