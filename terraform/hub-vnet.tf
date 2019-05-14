@@ -102,7 +102,7 @@ resource "azurerm_network_interface" "hub-nva1-nic2" {
     subnet_id                     = "${azurerm_subnet.hub-private.id}"
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.74.9.132"
-    load_balancer_backend_address_pools_ids = ["${azurerm_lb_backend_address_pool.azlb.id}"]
+#    load_balancer_backend_address_pools_ids = ["${azurerm_lb_backend_address_pool.azlb.id}"]
   }
 
   tags {
@@ -145,7 +145,7 @@ resource "azurerm_network_interface" "hub-nva2-nic2" {
     subnet_id                     = "${azurerm_subnet.hub-private.id}"
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.74.9.133"
-    load_balancer_backend_address_pools_ids = ["${azurerm_lb_backend_address_pool.azlb.id}"]
+#    load_balancer_backend_address_pools_ids = ["${azurerm_lb_backend_address_pool.azlb.id}"]
   }
 
   tags {
