@@ -52,7 +52,7 @@ resource "azurerm_public_ip" "nva1_public" {
   resource_group_name  = "${azurerm_resource_group.hub-vnet-rg.name}"
   allocation_method   = "Static"
   sku                 = "Standard"
-  zones               = ["1"]
+#  zones               = ["1"]
 }
 
 # Create Public IP for NVA2
@@ -63,7 +63,7 @@ resource "azurerm_public_ip" "nva2_public" {
   resource_group_name  = "${azurerm_resource_group.hub-vnet-rg.name}"
   allocation_method   = "Static"
   sku                 = "Standard"
-  zones               = ["2"]
+#  zones               = ["2"]
 }
 
 
@@ -156,13 +156,13 @@ resource "azurerm_network_interface" "hub-nva2-nic2" {
 # Create NVA1 and attach NICS
 
 resource "azurerm_virtual_machine" "hub-nva1-vm" {
-  name                  = "${local.prefix-hub}-vm"
+  name                  = "${local.prefix-hub}-nva1"
   location              = "${azurerm_resource_group.hub-vnet-rg.location}"
   resource_group_name   = "${azurerm_resource_group.hub-vnet-rg.name}"
   network_interface_ids = ["${azurerm_network_interface.hub-nva1-nic1.id}", "${azurerm_network_interface.hub-nva1-nic2.id}"]
   primary_network_interface_id = "${azurerm_network_interface.hub-nva1-nic1.id}"
   vm_size               = "${var.vmsize}"
-  zones                 = ["1"]
+#  zones                 = ["1"]
 
   storage_image_reference {
     publisher = "cisco"
@@ -185,7 +185,7 @@ resource "azurerm_virtual_machine" "hub-nva1-vm" {
   }
 
   os_profile {
-    computer_name  = "${local.prefix-hub}-vm"
+    computer_name  = "${local.prefix-hub}-nva1"
     admin_username = "${var.username}"
     admin_password = "${var.password}"
     custom_data    = "${file("customdatacsr1.txt")}"
@@ -203,13 +203,13 @@ resource "azurerm_virtual_machine" "hub-nva1-vm" {
 # Create NVA2 and attach NICS
 
 resource "azurerm_virtual_machine" "hub-nva2-vm" {
-  name                  = "${local.prefix-hub}-vm"
+  name                  = "${local.prefix-hub}-nva2"
   location              = "${azurerm_resource_group.hub-vnet-rg.location}"
   resource_group_name   = "${azurerm_resource_group.hub-vnet-rg.name}"
   network_interface_ids = ["${azurerm_network_interface.hub-nva2-nic1.id}", "${azurerm_network_interface.hub-nva2-nic2.id}"]
   primary_network_interface_id = "${azurerm_network_interface.hub-nva2-nic1.id}"
   vm_size               = "${var.vmsize}"
-  zones                 = ["2"]
+#  zones                 = ["2"]
 
   storage_image_reference {
     publisher = "cisco"
@@ -232,7 +232,7 @@ resource "azurerm_virtual_machine" "hub-nva2-vm" {
   }
 
   os_profile {
-    computer_name  = "${local.prefix-hub}-vm"
+    computer_name  = "${local.prefix-hub}-nva2"
     admin_username = "${var.username}"
     admin_password = "${var.password}"
     custom_data    = "${file("customdatacsr2.txt")}"
@@ -299,7 +299,7 @@ resource "azurerm_lb_rule" "azlb" {
   frontend_ip_configuration_name = "${local.prefix-hub}-fip"
   enable_floating_ip             = false
   backend_address_pool_id        = "${azurerm_lb_backend_address_pool.azlb.id}"
-  idle_timeout_in_minutes        = 5
+  idle_timeout_in_minutes        = "5"
   probe_id                       = "${azurerm_lb_probe.azlb.id}"
   depends_on                     = ["azurerm_lb_probe.azlb"]
 }
@@ -333,7 +333,7 @@ resource "azurerm_network_security_group" "nva-nsg" {
         protocol                   = "Tcp"
         source_port_range          = "*"
         destination_port_range     = "22"
-      source_address_prefix      = "*"
+        source_address_prefix      = "*"
         destination_address_prefix = "*"
     }
 
