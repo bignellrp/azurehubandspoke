@@ -1,0 +1,42 @@
+Section: IOS configuration
+
+ip domain name CSR1.cisco.com
+crypto ikev2 profile default
+match identity remote fqdn domain cisco.com
+identity local fqdn CSR1.cisco.com
+authentication remote pre-share key cisco123
+authentication local pre-share key cisco123
+crypto ikev2 dpd 10 2 on-demand
+interface Loopback0
+ip address 10.255.1.1 255.255.255.255
+interface Tunnel1
+description to ONPREM
+ip unnumbered Loopback0
+tunnel source GigabitEthernet1
+tunnel mode ipsec ipv4
+tunnel destination 51.143.190.207
+tunnel protection ipsec profile default
+interface Gi1
+description "Public"
+ip address dhcp
+interface Gi2
+description "Private"
+ip address dhcp
+router bgp 65001
+bgp log-neighbor-changes
+bgp bestpath as-path multipath-relax
+neighbor 10.255.3.1 remote-as 65000
+neighbor 10.255.3.1 ebgp-multihop 3
+neighbor 10.255.3.1 update-source Loopback0
+address-family ipv4
+network 10.74.0.0 mask 255.255.0.0
+neighbor 10.255.3.1 activate
+neighbor 10.255.3.1 route-map bgp out
+maximum-paths 16
+exit-address-family
+ip route 10.74.0.0 255.255.0.0 10.74.9.129
+ip route 10.255.3.1 255.255.255.255 Tunnel1
+ip route 168.63.129.16 255.255.255.255 10.74.9.129
+ip prefix-list bgp seq 5 permit 10.74.0.0/16
+route-map bgp permit 10
+match ip address prefix-list bgp
