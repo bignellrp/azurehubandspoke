@@ -188,7 +188,7 @@ resource "azurerm_virtual_machine" "hub-nva1-vm" {
     computer_name  = "${local.prefix-hub}-vm"
     admin_username = "${var.username}"
     admin_password = "${var.password}"
-    custom_data    = "${file("customdata.txt")}"
+    custom_data    = "${file("customdatacsr1.txt")}"
   }
 
   os_profile_linux_config {
@@ -235,7 +235,7 @@ resource "azurerm_virtual_machine" "hub-nva2-vm" {
     computer_name  = "${local.prefix-hub}-vm"
     admin_username = "${var.username}"
     admin_password = "${var.password}"
-    custom_data    = "${file("customdata.txt")}"
+    custom_data    = "${file("customdatacsr2.txt")}"
   }
 
   os_profile_linux_config {
