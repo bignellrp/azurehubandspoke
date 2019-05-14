@@ -306,13 +306,13 @@ resource "azurerm_lb_rule" "azlb" {
 # Associate IPs to Address Pool
 
 resource "azurerm_network_interface_backend_address_pool_association" "lb_assoc_nva1" {
-  network_interface_id    = "${azurerm_network_interface.hub_nva1_nic2.id}"
-  ip_configuration_name   = "${azurerm_network_interface.hub_nva1_nic2.ip_configuration.0.name}"
+  network_interface_id    = "${azurerm_network_interface.hub-nva1-nic2.id}"
+  ip_configuration_name   = "${azurerm_network_interface.hub-nva1-nic2.ip_configuration.0.name}"
   backend_address_pool_id = "${azurerm_lb_backend_address_pool.azlb.id}"
 }
 
 resource "azurerm_network_interface_backend_address_pool_association" "lb_assoc_nva2" {
-  network_interface_id    = "${azurerm_network_interface.hub_nva2_nic2.id}"
-  ip_configuration_name   = "${azurerm_network_interface.hub_nva2_nic2.ip_configuration.0.name}"
+  network_interface_id    = "${azurerm_network_interface.hub-nva2-nic2.id}"
+  ip_configuration_name   = "${azurerm_network_interface.hub-nva2-nic2.ip_configuration.0.name}"
   backend_address_pool_id = "${azurerm_lb_backend_address_pool.azlb.id}"
 }
